@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detector de Emociones - Análisis Avanzado</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f3f3f3 0%, #f3f3f3 100%);
+      min-height: 100vh;
+      color: #1a202c;
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 32px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header {
+      background: linear-gradient(135deg, #294fb6 0%, #958dff 100%);
+      color: white;
+      padding: 60px 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+      opacity: 0.3;
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .main-title {
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      letter-spacing: -0.05em;
+      background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .main-subtitle {
+      font-size: 1.25rem;
+      opacity: 0.9;
+      font-weight: 400;
+      margin-bottom: 32px;
+    }
+
+    .tech-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .header-btn {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.3);
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      gap: 0;
+      min-height: 600px;
+    }
+
+    .upload-section {
+      padding: 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .section-title {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-subtitle {
+      font-size: 1rem;
+      color: #64748b;
+      margin-bottom: 48px;
+      line-height: 1.6;
+    }
+
+    .divider {
+      background: linear-gradient(to bottom, transparent, #e2e8f0, transparent);
+      width: 1px;
+    }
+
+    .results-section {
+      padding: 80px;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .upload-area {
+      position: relative;
+      width: 100%;
+      max-width: 450px;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      width: 100%;
+      margin-bottom: 32px;
+    }
+
+    .file-input {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .file-input-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 48px 32px;
+      border: 3px dashed #cbd5e1;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      transition: all 0.4s ease;
+      cursor: pointer;
+      min-height: 200px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .file-input-display::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, transparent 0%, rgba(59, 130, 246, 0.05) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .file-input-display:hover {
+      border-color: #3b82f6;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .file-input-display:hover::before {
+      opacity: 1;
+    }
+
+    .upload-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      opacity: 0.7;
+      transition: all 0.3s ease;
+    }
+
+    .file-input-display:hover .upload-icon {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    .upload-text {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .upload-hint {
+      font-size: 0.875rem;
+      color: #6b7280;
+      font-weight: 400;
+    }
+
+    .image-preview {
+      margin-top: 24px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e5e7eb;
+      display: none;
+      background: white;
+    }
+
+    .preview-image {
+      width: 100%;
+      height: auto;
+      max-height: 300px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .preview-info {
+      padding: 20px 24px;
+      background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .file-name {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 4px;
+      font-size: 0.875rem;
+    }
+
+    .file-size {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      border: none;
+      padding: 16px 48px;
+      border-radius: 16px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.4);
+    }
+
+    .submit-btn:hover::before {
+      left: 100%;
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .results-placeholder {
+      text-align: center;
+      color: #64748b;
+      font-size: 1.125rem;
+    }
+
+    .results-icon {
+      font-size: 4rem;
+      margin-bottom: 24px;
+      opacity: 0.3;
+    }
+
+    .results-content {
+      width: 100%;
+      max-width: 450px;
+    }
+
+    .emotion-result {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .emotion-label {
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 12px;
+      font-size: 1.125rem;
+    }
+
+    .emotion-text {
+      color: #475569;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .result-image {
+      border-radius: 20px;
+      max-width: 100%;
+      height: auto;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e5e7eb;
+    }
+
+    .feature-list {
+      display: flex;
+      gap: 32px;
+      margin-top: 32px;
+      flex-wrap: wrap;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .feature-icon {
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.75rem;
+    }
+
+    /* Estilos del modal de historial */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+      background: white;
+      margin: 2% auto;
+      padding: 0;
+      width: 90%;
+      max-width: 1000px;
+      border-radius: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      max-height: 90vh;
+      overflow: hidden;
+      animation: modalShow 0.3s ease-out;
+    }
+
+    @keyframes modalShow {
+      from {
+        opacity: 0;
+        transform: scale(0.8) translateY(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #294fb6 0%, #958dff 100%);
+      color: white;
+      padding: 32px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 1.875rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .close {
+      color: white;
+      font-size: 32px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .close:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.1);
+    }
+
+    .modal-body {
+      padding: 40px;
+      max-height: calc(90vh - 140px);
+      overflow-y: auto;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .history-table th {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      color: #374151;
+      font-weight: 600;
+      padding: 20px 24px;
+      text-align: left;
+      border-bottom: 2px solid #e5e7eb;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .history-table td {
+      padding: 20px 24px;
+      border-bottom: 1px solid #f3f4f6;
+      color: #374151;
+      vertical-align: middle;
+    }
+
+    .history-table tr:hover {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+
+    .history-image {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e5e7eb;
+    }
+
+    .emotion-tag {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      display: inline-block;
+      margin: 2px;
+    }
+
+    .date-text {
+      font-size: 0.875rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    .no-history {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6b7280;
+    }
+
+    .no-history-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      opacity: 0.3;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #6b7280;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f4f6;
+      border-top: 4px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    .metrics-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+    
+    .metric-item {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+    
+    .metric-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    
+    .metric-value {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    
+    /* Ajustamos el ancho de las columnas en la tabla de historial */
+    .history-table th:nth-child(1),
+    .history-table td:nth-child(1) {
+      width: 120px;
+    }
+    
+    .history-table th:nth-child(4),
+    .history-table td:nth-child(4),
+    .history-table th:nth-child(5),
+    .history-table td:nth-child(5),
+    .history-table th:nth-child(6),
+    .history-table td:nth-child(6) {
+      width: 100px;
+      text-align: center;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 1024px) {
+      .content-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+      .divider {
+        display: none;
+      }
+
+      .upload-section,
+      .results-section {
+        padding: 60px 40px;
+      }
+
+      .main-title {
+        font-size: 2.5rem;
+      }
+
+      .header {
+        padding: 40px;
+      }
+
+      .modal-content {
+        width: 95%;
+        margin: 1% auto;
+      }
+
+      .modal-body {
+        padding: 24px;
+      }
+
+      .history-table {
+        font-size: 0.875rem;
+      }
+
+      .history-table th,
+      .history-table td {
+        padding: 16px 12px;
+      }
+
+      .header-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .upload-section,
+      .results-section {
+        padding: 40px 24px;
+      }
+
+      .main-title {
+        font-size: 2rem;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+      }
+
+      .feature-list {
+        gap: 16px;
+      }
+
+      .file-input-display {
+        padding: 32px 24px;
+        min-height: 160px;
+      }
+
+      .upload-icon {
+        font-size: 3rem;
+      }
+
+      .modal-header {
+        padding: 24px;
+      }
+
+      .modal-title {
+        font-size: 1.5rem;
+      }
+
+      .modal-body {
+        padding: 20px;
+      }
+
+      .history-table {
+        font-size: 0.75rem;
+      }
+
+      .history-table th,
+      .history-table td {
+        padding: 12px 8px;
+      }
+
+      .history-image {
+        width: 60px;
+        height: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <header class="header">
+      <div class="header-content">
+        <h1 class="main-title">Detector de Emociones</h1>
+        <div class="header-buttons">
+          <button class="header-btn" id="historyBtn">
+            📊 Ver Historial
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="content-grid">
+      <section class="upload-section">
+        <h2 class="section-title">
+          <span>📤</span>
+          Cargar Imagen
+        </h2>
+        <p class="section-subtitle">
+          Sube una imagen para analizar las expresiones faciales y métricas detalladas.
+        </p>
+
+        <form method="POST" enctype="multipart/form-data" class="upload-area">
+          <div class="file-input-wrapper">
+            <input type="file" name="image" accept="image/*" required class="file-input" id="imageInput">
+            <label for="imageInput" class="file-input-display">
+              <div class="upload-icon">🖼️</div>
+              <div class="upload-text">Seleccionar imagen</div>
+              <div class="upload-hint">Formatos soportados: JPG, PNG, JPEG (máx. 10MB)</div>
+            </label>
+            <div class="image-preview" id="imagePreview">
+              <img src="" alt="Vista previa" class="preview-image" id="previewImg">
+              <div class="preview-info">
+                <div class="file-name" id="fileName"></div>
+                <div class="file-size" id="fileSize"></div>
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="submit-btn">
+            Analizar Emociones
+          </button>
+        </form>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon">✓</div>
+            <span>Detección múltiple</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">✓</div>
+            <span>Métricas faciales</span>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">✓</div>
+            <span>Análisis preciso</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section class="results-section">
+        <h2 class="section-title">
+          <span>📊</span>
+          Resultados
+        </h2>
+        <p class="section-subtitle">
+          Los resultados del análisis aparecerán aquí con emociones y métricas faciales.
+        </p>
+
+        {% if emociones %}
+        <div class="results-content">
+          <div class="emotion-result">
+            <div class="emotion-label">Emociones detectadas:</div>
+            <div class="emotion-text">{{ emociones }}</div>
+            <div class="metrics-container">
+              <div class="metric-item">
+                <div class="metric-label">Apertura Boca</div>
+                <div class="metric-value">{{ apertura_boca }}</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">Anchura Boca</div>
+                <div class="metric-value">{{ anchura_boca }}</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-label">Elevación Cejas</div>
+                <div class="metric-value">{{ elevacion_cejas }}</div>
+              </div>
+            </div>
+          </div>
+          <img src="{{ image_path }}" class="result-image">
+        </div>
+        {% else %}
+        <div class="results-placeholder">
+          <div class="results-icon">🔍</div>
+          <p>Esperando análisis...</p>
+        </div>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+
+  <!-- Modal del historial -->
+  <div id="historyModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          📊 Historial de Análisis
+        </h2>
+        <span class="close" id="closeModal">&times;</span>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <p>Cargando historial...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('imageInput');
+    const fileDisplay = document.querySelector('.file-input-display');
+    const uploadText = document.querySelector('.upload-text');
+    const uploadHint = document.querySelector('.upload-hint');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const uploadIcon = document.querySelector('.upload-icon');
+
+    // Modal elements
+    const modal = document.getElementById('historyModal');
+    const historyBtn = document.getElementById('historyBtn');
+    const closeModal = document.getElementById('closeModal');
+    const modalBody = document.getElementById('modalBody');
+
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function showPreview(file) {
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        previewImg.src = e.target.result;
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        imagePreview.style.display = 'block';
+        uploadIcon.textContent = '✅';
+        uploadText.textContent = 'Imagen cargada correctamente';
+        uploadHint.textContent = 'Haz clic para cambiar la imagen';
+        fileDisplay.style.borderColor = '#10b981';
+        fileDisplay.style.background = 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)';
+      };
+      
+      reader.readAsDataURL(file);
+    }
+
+    function resetPreview() {
+      imagePreview.style.display = 'none';
+      uploadIcon.textContent = '🖼️';
+      uploadText.textContent = 'Seleccionar imagen';
+      uploadHint.textContent = 'Formatos soportados: JPG, PNG, JPEG (máx. 10MB)';
+      fileDisplay.style.borderColor = '#cbd5e1';
+      fileDisplay.style.background = 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)';
+      previewImg.src = '';
+    }
+
+    // Funciones del modal de historial
+    function openHistoryModal() {
+      modal.style.display = 'block';
+      loadHistoryData();
+    }
+
+    function closeHistoryModal() {
+      modal.style.display = 'none';
+    }
+
+    async function loadHistoryData() {
+      try {
+        modalBody.innerHTML = `
+          <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>Cargando historial...</p>
+          </div>
+        `;
+
+        const response = await fetch('/get_csv');
+
+        
+        if (!response.ok) {
+          throw new Error('No se pudo cargar el archivo CSV');
+        }
+
+        const csvText = await response.text();
+        const historyData = parseCSV(csvText);
+        
+        if (historyData.length === 0) {
+          modalBody.innerHTML = `
+            <div class="no-history">
+              <div class="no-history-icon">📊</div>
+              <h3>No hay análisis previos</h3>
+              <p>Los análisis realizados aparecerán aquí.</p>
+            </div>
+          `;
+          return;
+        }
+
+        displayHistoryTable(historyData);
+        
+      } catch (error) {
+        console.error('Error cargando historial:', error);
+        modalBody.innerHTML = `
+          <div class="no-history">
+            <div class="no-history-icon">❌</div>
+            <h3>Error al cargar el historial</h3>
+            <p>${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function parseCSV(csvText) {
+      const lines = csvText.trim().split('\n');
+      if (lines.length <= 1) return [];
+      
+      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+      const data = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+        if (values.length === headers.length) {
+          const row = {};
+          headers.forEach((header, index) => {
+            row[header] = values[index];
+          });
+          data.push(row);
+        }
+      }
+      
+      return data.reverse();
+    }
+
+    function displayHistoryTable(data) {
+      let tableHTML = `
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Imagen</th>
+              <th>Hora</th>
+              <th>Emociones</th>
+              <th>Apertura Boca</th>
+              <th>Anchura Boca</th>
+              <th>Elevación Cejas</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      data.forEach(row => {
+        const imagePath = row.Imagen || 'N/A';
+        const time = row.Hora || 'N/A';
+        const emotions = row.Emociones || 'N/A';
+        const mouthOpen = row.Apertura_Boca || 'N/A';
+        const mouthWidth = row.Anchura_Boca || 'N/A';
+        const browRaise = row.Elevacion_Cejas || 'N/A';
+        
+        const emotionTags = emotions.split(',').map(emotion => 
+          `<span class="emotion-tag">${emotion.trim()}</span>`
+        ).join('');
+
+        tableHTML += `
+          <tr>
+            <td>
+              ${imagePath !== 'N/A' ? 
+                `<img src="${imagePath}" alt="Imagen analizada" class="history-image">` : 
+                'N/A'}
+            </td>
+            <td><span class="date-text">${time}</span></td>
+            <td>${emotionTags}</td>
+            <td>${mouthOpen}</td>
+            <td>${mouthWidth}</td>
+            <td>${browRaise}</td>
+          </tr>
+        `;
+      });
+
+      tableHTML += `
+          </tbody>
+        </table>
+      `;
+
+      modalBody.innerHTML = tableHTML;
+    }
+
+    // Event listeners
+    fileInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        const file = this.files[0];
+        if (file.size > 10 * 1024 * 1024) {
+          alert('El archivo es demasiado grande. El tamaño máximo permitido es 10MB.');
+          resetPreview();
+          return;
+        }
+        showPreview(file);
+      } else {
+        resetPreview();
+      }
+    });
+
+    historyBtn.addEventListener('click', openHistoryModal);
+    closeModal.addEventListener('click', closeHistoryModal);
+
+    window.addEventListener('click', function(event) {
+      if (event.target === modal) {
+        closeHistoryModal();
+      }
+    });
+
+    fileDisplay.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      this.style.borderColor = '#3b82f6';
+      this.style.background = 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)';
+    });
+
+    fileDisplay.addEventListener('dragleave', function() {
+      this.style.borderColor = imagePreview.style.display === 'block' ? '#10b981' : '#cbd5e1';
+      this.style.background = imagePreview.style.display === 'block' ? 
+        'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)' : 
+        'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)';
+    });
+
+    fileDisplay.addEventListener('drop', function(e) {
+      e.preventDefault();
+      if (e.dataTransfer.files.length) {
+        const file = e.dataTransfer.files[0];
+        if (file.type.match('image.*')) {
+          if (file.size > 10 * 1024 * 1024) {
+            alert('El archivo es demasiado grande. El tamaño máximo permitido es 10MB.');
+            return;
+          }
+          fileInput.files = e.dataTransfer.files;
+          showPreview(file);
+        } else {
+          alert('Por favor, selecciona un archivo de imagen válido.');
+        }
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const resultsSection = document.querySelector('.results-section');
+      const hasResults = resultsSection.querySelector('.results-content') !== null;
+      
+      if (hasResults) {
+        resultsSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  </script>
+</body>
+</html>
