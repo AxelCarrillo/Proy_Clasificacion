@@ -1,5 +1,14 @@
 # Proy_Clasificacion
 
+## Materia:
+Extracción de conocimientos en bases de datos
+
+## Docente:
+Salvador Hernández Mendoza
+
+## Alumnos:
+Carlos Axel Carrillo Rocha, Brandon Castro Morales, Gustavo Del Razo Rivera, Brallan Josue Tolentino Velasco
+
 # Paso 1: Definición de Requisitos
 
 Problema identificado: Necesidad de analizar expresiones faciales en contextos de entrevistas para analizar los comportamiento de la cara.
